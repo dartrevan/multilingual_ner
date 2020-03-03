@@ -169,8 +169,8 @@ class DataProcessor(object):
             for tweet, labels, gazetteers in zip(tweets_input_stream, labels_input_stream, gazetteers_input_stream):
                 w = ' '.join([word for word in tweet.strip().split() if len(word) > 0])
                 if not FLAGS.do_train:
-                    l = ['O']*len(w.split())
-                    g = ['O']*len(w.split())
+                    l = ' '.join(['O']*len(w.split()))
+                    g = ' '.join(['O']*len(w.split()))
                 else:
                     l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
                     g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
@@ -519,8 +519,8 @@ def read_tokens(token_path):
 
 def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
-    if not FLAGS.do_train and not FLAGS.do_eval:
-        raise ValueError("At least one of `do_train` or `do_eval` must be True.")
+    #if not FLAGS.do_train and not FLAGS.do_eval:
+    #    raise ValueError("At least one of `do_train` or `do_eval` must be True.")
 
     bert_config = modeling.BertConfig.from_json_file(FLAGS.bert_config_file)
 
@@ -650,8 +650,9 @@ def main(_):
 
         result = estimator.predict(input_fn=predict_input_fn)
         output_predict_file = os.path.join(FLAGS.output_dir, "label_test.txt")
+        tokens_iterator = read_tokens(token_path)
         with open(output_predict_file,'w') as p_writer:
-            for tokens, prediction in enumerate(read_tokens(token_path), result):
+            for tokens, prediction in zip(tokens_iterator, result):
                 slen = len(tokens)
                 output_line = "\n".join(id2label[id] if id != 0 else id2label[3] for id in prediction['prediction'][:slen]) + "\n"
                 p_writer.write(output_line)
