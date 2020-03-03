@@ -18,6 +18,7 @@ import tensorflow as tf
 from tensorflow.python.ops import math_ops
 import tf_metrics
 import pickle
+import sys
 flags = tf.flags
 
 FLAGS = flags.FLAGS
@@ -138,6 +139,12 @@ class InputFeatures(object):
         self.length = length
 
 
+def open_ifexists(fpath):
+    if os.path.exists(fpath):
+        return open(fpath, encoding='utf-8')
+    return range(sys.maxint)
+
+
 class DataProcessor(object):
     """Base class for data converters for sequence classification data sets."""
 
@@ -156,16 +163,20 @@ class DataProcessor(object):
     @classmethod
     def _read_data(self, tweets_file, labels_file, gazetteers_file):
         """Reads a BIO data."""
-        with open(tweets_file, encoding='utf-8') as tweets_input_stream, \
-          open(labels_file, encoding='utf-8') as labels_input_stream, \
-          open(gazetteers_file, encoding='utf-8') as gazetteers_input_stream:
+        with open_ifexists(tweets_file) as tweets_input_stream, \
+          open_ifexists(labels_file) as labels_input_stream, \
+          open_ifexists(gazetteers_file) as gazetteers_input_stream:
             lines = []
             for tweet, labels, gazetteers in zip(tweets_input_stream, labels_input_stream, gazetteers_input_stream):
-                l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
                 w = ' '.join([word for word in tweet.strip().split() if len(word) > 0])
-                g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
-                lines.append([l, w, g])
-        return lines
+                if not flags.do_train:
+                    l = ['O']*len(w.split())
+                    g = ['O']*len(w.split())
+                else:
+                    l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
+                    g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
+                yield [l, w, g]
+        #return lines
 
 
 class NerProcessor(DataProcessor):
@@ -603,7 +614,7 @@ def main(_):
         token_path = os.path.join(FLAGS.output_dir, "token_test.txt")
         with open(os.path.join(FLAGS.output_dir, 'label2id.pkl'), 'rb') as rf:
             label2id = pickle.load(rf)
-            id2label = {value:key for key,value in label2id.items()}
+            id2label = {value: key for key, value in label2id.items()}
         if os.path.exists(token_path):
             os.remove(token_path)
         predict_examples = processor.get_test_examples(FLAGS.data_dir)
@@ -638,22 +649,13 @@ def main(_):
                 else:
                     tmp_toks.append(tok)
 
-        prf = estimator.evaluate(input_fn=predict_input_fn, steps=None)
-        tf.logging.info("***** token-level evaluation results *****")
-        for key in sorted(prf.keys()):
-                tf.logging.info("  %s = %s", key, str(prf[key]))
-
         result = estimator.predict(input_fn=predict_input_fn)
         output_predict_file = os.path.join(FLAGS.output_dir, "label_test.txt")
-        output_logits_file = os.path.join(FLAGS.output_dir, "logits_test.txt")
         with open(output_predict_file,'w') as p_writer:
-            with open(output_logits_file,'w') as l_writer:
-                for pidx, prediction in enumerate(result):
-                    slen = len(tokens[pidx])
-                    output_line = "\n".join(id2label[id] if id!=0 else id2label[3] for id in prediction['prediction'][:slen]) + "\n"
-                    p_writer.write(output_line)
-                    output_line = "\n".join('\t'.join(str(log_prob) for log_prob in log_probs) for log_probs in prediction['log_probs'][:slen]) + "\n" 
-                    l_writer.write(output_line)
+            for pidx, prediction in enumerate(result):
+                slen = len(tokens[pidx])
+                output_line = "\n".join(id2label[id] if id!=0 else id2label[3] for id in prediction['prediction'][:slen]) + "\n"
+                p_writer.write(output_line)
 
 
 if __name__ == "__main__":
