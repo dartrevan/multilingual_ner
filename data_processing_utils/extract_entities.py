@@ -1,20 +1,38 @@
 from argparse import ArgumentParser
 import csv
 import json
+import re
 
 
-def extract_entities(tokens, labels):
+def extract_entities(tokens, labels, abstract, sentence_id, search_start_idx=0):
     entities = []
     entity = []
+    entity_start = None
+    entity_end = None
+    entity_id = 0
     for token, label in zip(tokens, labels):
+        token_pattern = re.compile(token)
+        token_match = token_pattern.search(abstract, search_start_idx)
+        token_start = token_match.start()
+        token_end = token_match.end()
+        search_start_idx = token_end
         if (label == 'O' or label.startswith('B-')) and len(entity) > 0:
-            entities.append({'span': ' '.join(entity)})
+            entities.append({
+                'span': ' '.join(entity),
+                'start': entity_start,
+                'end': entity_end,
+                'id': str(sentence_id) + '_' + str(entity_id)
+            })
+            entity_id += 1
             entity = []
         if label.startswith('B-'):
             entity.append(token)
+            entity_start = token_start
+            entity_end = token_end
         if label.startswith('I-'):
             entity.append(token)
-    return entities
+            entity_end = token_end
+    return entities, search_start_idx
 
 
 def read_doc_ids(doc_ids_path):
@@ -81,19 +99,32 @@ if __name__ == '__main__':
         gene_entities = []
         disease_entities = []
 
+        abstract = next(abstracts_stream)
+        g_search_start_idx = 0
+        d_search_start_idx = 0
+        sentence_id = 0
         for (doc_id, title), (tokens_dis, labels_dis), (tokens_gen, labels_gen) \
                 in zip(doc_ids_stream, disease_input_stream, gene_input_stream):
-            g_entities = extract_entities(tokens_gen, labels_gen)
-            d_entities = extract_entities(tokens_dis, labels_dis)
+            g_entities, g_search_start_idx = extract_entities(tokens_gen, labels_gen,
+                                                              abstract['abstract'], sentence_id, g_search_start_idx)
+            d_entities, d_search_start_idx = extract_entities(tokens_dis, labels_dis,
+                                                              abstract['abstract'], sentence_id, d_search_start_idx)
             if doc_id == prev_doc_id or prev_doc_id is None:
                 gene_entities += g_entities
                 disease_entities += d_entities
             else:
-                abstract = next(abstracts_stream)
                 entities = json.dumps({'disease': disease_entities, 'genes': gene_entities})
                 output_row = [doc_id, title, abstract['abstract'], entities, []]
                 writer.writerow(output_row)
-                disease_entities = []
-                gene_entities = []
+                disease_entities = d_entities
+                gene_entities = g_entities
+                g_search_start_idx = 0
+                d_search_start_idx = 0
+                try:
+                    abstract = next(abstracts_stream)
+                except StopIteration:
+                    print('Readed all abstracts')
+                    pass
             prev_doc_id = doc_id
+            sentence_id += 1
 
