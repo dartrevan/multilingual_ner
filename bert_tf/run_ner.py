@@ -142,7 +142,7 @@ class InputFeatures(object):
 def open_ifexists(fpath):
     if os.path.exists(fpath):
         return open(fpath, encoding='utf-8')
-    return range(sys.maxint)
+    return range(sys.maxsize)
 
 
 class DataProcessor(object):
@@ -163,18 +163,18 @@ class DataProcessor(object):
     @classmethod
     def _read_data(self, tweets_file, labels_file, gazetteers_file):
         """Reads a BIO data."""
-        with open_ifexists(tweets_file) as tweets_input_stream, \
-          open_ifexists(labels_file) as labels_input_stream, \
-          open_ifexists(gazetteers_file) as gazetteers_input_stream:
-            for tweet, labels, gazetteers in zip(tweets_input_stream, labels_input_stream, gazetteers_input_stream):
-                w = ' '.join([word for word in tweet.strip().split() if len(word) > 0])
-                if not FLAGS.do_train:
-                    l = ' '.join(['O']*len(w.split()))
-                    g = ' '.join(['O']*len(w.split()))
-                else:
-                    l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
-                    g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
-                yield [l, w, g]
+        tweets_input_stream = open_ifexists(tweets_file)
+        labels_input_stream = open_ifexists(labels_file)
+        gazetteers_input_stream = open_ifexists(gazetteers_file)
+        for tweet, labels, gazetteers in zip(tweets_input_stream, labels_input_stream, gazetteers_input_stream):
+            w = ' '.join([word for word in tweet.strip().split() if len(word) > 0])
+            if not FLAGS.do_train:
+                l = ' '.join(['O']*len(w.split()))
+                g = ' '.join(['O']*len(w.split()))
+            else:
+                l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
+                g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
+            yield [l, w, g]
 
 
 class NerProcessor(DataProcessor):

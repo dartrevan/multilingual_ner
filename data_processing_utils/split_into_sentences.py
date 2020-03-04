@@ -1,6 +1,7 @@
 from nltk.tokenize import sent_tokenize
 from argparse import ArgumentParser
 import pandas as pd
+import os
 
 
 if __name__ == '__main__':
@@ -13,6 +14,10 @@ if __name__ == '__main__':
 
     chunk_id = 0
     sentences = 0
+    if os.path.exists(args.save_sentences_to):
+        os.remove(args.save_sentences_to)
+    if os.path.exists(args.save_doc_ids_to):
+        os.remove(args.save_doc_ids_to)
     for chunk in pd.read_csv(args.input_file, chunksize=args.chunksize, usecols=['_id', 'project_title', 'abstract']):
         chunk['abstract_sentences'] = chunk.abstract.str.replace('\n', ' ').apply(sent_tokenize)
         chunk = chunk[['_id', 'project_title', 'abstract_sentences']]

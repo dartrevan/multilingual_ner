@@ -1,14 +1,14 @@
 from argparse import ArgumentParser
 import csv
+import json
 
 
 def extract_entities(tokens, labels):
     entities = []
-    text_entities = []
     entity = []
     for token, label in zip(tokens, labels):
         if (label == 'O' or label.startswith('B-')) and len(entity) > 0:
-            text_entities.append({'span': entity})
+            entities.append({'span': ' '.join(entity)})
             entity = []
         if label.startswith('B-'):
             entity.append(token)
@@ -90,7 +90,10 @@ if __name__ == '__main__':
                 disease_entities += d_entities
             else:
                 abstract = next(abstracts_stream)
-                entities = {'disease': disease_entities, 'genes': gene_entities}
+                entities = json.dumps({'disease': disease_entities, 'genes': gene_entities})
                 output_row = [doc_id, title, abstract['abstract'], entities, []]
                 writer.writerow(output_row)
+                disease_entities = []
+                gene_entities = []
+            prev_doc_id = doc_id
 
