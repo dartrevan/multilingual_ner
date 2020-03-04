@@ -14,7 +14,7 @@ if __name__ == '__main__':
     chunk_id = 0
     sentences = 0
     for chunk in pd.read_csv(args.input_file, chunksize=args.chunksize, usecols=['_id', 'project_title', 'abstract']):
-        chunk['abstract_sentences'] = chunk.abstract.apply(sent_tokenize)
+        chunk['abstract_sentences'] = chunk.abstract.str.replace('\n', ' ').apply(sent_tokenize)
         chunk = chunk[['_id', 'project_title', 'abstract_sentences']]
         chunk = chunk.explode('abstract_sentences')
         chunk[['_id', 'project_title']].to_csv(args.save_doc_ids_to, index=False,
