@@ -2,7 +2,7 @@
 WORKING_DIR=/tmp/work_dir
 DIS_OUTPUT_DIR=/tmp/dis_outputs
 GEN_OUTPUT_DIR=/tmp/gen_outputs
-MODEL_DIR=/model
+MODEL_DIR=model
 DATA_DIR=/data
 
 mkdir $WORKING_DIR
