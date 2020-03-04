@@ -19,8 +19,8 @@ RUN apt-get update && \
     rm /var/lib/apt/lists/*_*
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update
-RUN apt-get install -y python3.6-tk zlib1g-dev libjpeg-dev libsm6 libxext6 libopenblas-dev libomp-dev
+#RUN apt-get update
+#RUN apt-get install -y python3.6-tk zlib1g-dev libjpeg-dev libsm6 libxext6 libopenblas-dev libomp-dev
 
 # Link python to python3
 RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3 && \
@@ -37,5 +37,7 @@ ENV LC_ALL C.UTF-8
 
 ADD ./ /root/gene_disease_ner
 WORKDIR /root/gene_disease_ner
+RUN pip install -r requirements.txt
+RUN python -c "import nltk; nltk.download('punkt')"
 CMD ./run_scripts/annotate.sh
 

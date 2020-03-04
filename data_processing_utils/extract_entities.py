@@ -11,10 +11,8 @@ def extract_entities(tokens, labels, abstract, sentence_id, search_start_idx=0):
     entity_end = None
     entity_id = 0
     for token, label in zip(tokens, labels):
-        token_pattern = re.compile(token)
-        token_match = token_pattern.search(abstract, search_start_idx)
-        token_start = token_match.start()
-        token_end = token_match.end()
+        token_start = abstract.find(token, search_start_idx) #token_match.start()
+        token_end = token_start + len(token) #token_match.end()
         search_start_idx = token_end
         if (label == 'O' or label.startswith('B-')) and len(entity) > 0:
             entities.append({
@@ -99,12 +97,16 @@ if __name__ == '__main__':
         gene_entities = []
         disease_entities = []
 
-        abstract = next(abstracts_stream)
+        #abstract = next(abstracts_stream)
         g_search_start_idx = 0
         d_search_start_idx = 0
         sentence_id = 0
         for (doc_id, title), (tokens_dis, labels_dis), (tokens_gen, labels_gen) \
                 in zip(doc_ids_stream, disease_input_stream, gene_input_stream):
+            if doc_id!= prev_doc_id or prev_doc_id is None:
+                abstract = next(abstracts_stream)
+                g_search_start_idx = 0
+                d_search_start_idx = 0
             g_entities, g_search_start_idx = extract_entities(tokens_gen, labels_gen,
                                                               abstract['abstract'], sentence_id, g_search_start_idx)
             d_entities, d_search_start_idx = extract_entities(tokens_dis, labels_dis,
@@ -118,13 +120,15 @@ if __name__ == '__main__':
                 writer.writerow(output_row)
                 disease_entities = d_entities
                 gene_entities = g_entities
-                g_search_start_idx = 0
-                d_search_start_idx = 0
-                try:
-                    abstract = next(abstracts_stream)
-                except StopIteration:
-                    print('Readed all abstracts')
-                    pass
+                #g_search_start_idx = 0
+                #d_search_start_idx = 0
+                #try:
+                #    abstract = next(abstracts_stream)
+                #except StopIteration:
+                #    print('Readed all abstracts')
+                #    pass
             prev_doc_id = doc_id
             sentence_id += 1
-
+        entities = json.dumps({'disease': disease_entities, 'genes': gene_entities})
+        output_row = [doc_id, title, abstract['abstract'], entities, []]
+        writer.writerow(output_row)
