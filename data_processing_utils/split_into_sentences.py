@@ -18,7 +18,8 @@ if __name__ == '__main__':
         os.remove(args.save_sentences_to)
     if os.path.exists(args.save_doc_ids_to):
         os.remove(args.save_doc_ids_to)
-    for chunk in pd.read_csv(args.input_file, chunksize=args.chunksize, usecols=['_id', 'project_title', 'abstract']):
+    for chunk in pd.read_csv(args.input_file, chunksize=args.chunksize, usecols=['_id', 'project_title', 'abstract'], compression='gzip', error_bad_lines=False):
+        chunk.fillna('NOTEXT', inplace=True)
         chunk['abstract_sentences'] = chunk.abstract.str.replace('\n', ' ').apply(sent_tokenize)
         chunk = chunk[['_id', 'project_title', 'abstract_sentences']]
         chunk = chunk.explode('abstract_sentences')

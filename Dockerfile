@@ -1,10 +1,9 @@
-FROM nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
-
+FROM tobycheese/cuda:9.0-cudnn7-devel-ubuntu18.04
 
 ## CLeanup
-RUN rm -rf /var/lib/apt/lists/* \
-           /etc/apt/sources.list.d/cuda.list \
-           /etc/apt/sources.list.d/nvidia-ml.list
+#RUN rm -rf /var/lib/apt/lists/* \
+#           /etc/apt/sources.list.d/cuda.list \
+#           /etc/apt/sources.list.d/nvidia-ml.list
 
 ARG APT_INSTALL="apt-get install -y --no-install-recommends"
 ## Python3
@@ -19,8 +18,8 @@ RUN apt-get update && \
     rm /var/lib/apt/lists/*_*
 
 ENV DEBIAN_FRONTEND=noninteractive
-#RUN apt-get update
-#RUN apt-get install -y python3.6-tk zlib1g-dev libjpeg-dev libsm6 libxext6 libopenblas-dev libomp-dev
+RUN apt-get update
+RUN apt-get install -y python3.6-tk zlib1g-dev libjpeg-dev libsm6 libxext6 git nano tmux default-jre ninja-build libopenblas-dev libomp-dev
 
 # Link python to python3
 RUN ln -s /usr/bin/python3.6 /usr/local/bin/python3 && \
