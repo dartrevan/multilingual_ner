@@ -69,8 +69,7 @@ def read(tokens_file, labels_file):
             tokens.append(token)
             labels.append(label)
     if len(tokens) != 0:
-        yield tokens
-        yield labels
+        yield tokens, labels
 
 
 if __name__ == '__main__':
