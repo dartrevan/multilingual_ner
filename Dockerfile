@@ -34,8 +34,8 @@ RUN rm get-pip.py
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 
-ADD ./ /root/gene_disease_ner
-WORKDIR /root/gene_disease_ner
+ADD ./ /root/multilingual_ner
+WORKDIR /root/multilingual_ner
 RUN pip install -r requirements.txt
 RUN python -c "import nltk; nltk.download('punkt')"
 CMD ./run_scripts/annotate.sh
