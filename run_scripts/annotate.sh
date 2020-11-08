@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 WORKING_DIR=/tmp/work_dir
-OUTPUT_DIR=/tmp/outputs
+OUTPUT_DIR=/tmp/finetuned_model
 MODEL_DIR=model
 DATA_DIR=/data
 
