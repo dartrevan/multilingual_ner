@@ -62,18 +62,17 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--conll_file', help='')
     parser.add_argument('--save_to', help='')
-    parser.add_argument('--document_ids', type=str, help='')
+    #parser.add_argument('--document_ids', type=str, help='')
     args = parser.parse_args()
 
     data = {}
     prev_doc_id = None
     document = {}
-    with open(args.document_ids, encoding='utf-8') as document_ids_input_stream, \
-        open(args.save_to, 'w', encoding='utf-8') as output_stream:
-      for document_id, document_sentence in zip( document_ids_input_stream, iter_sentences(args.conll_file)):
+    with open(args.save_to, 'w', encoding='utf-8') as output_stream:
+      for document_id, document_sentence in enumerate(iter_sentences(args.conll_file)):
         if  prev_doc_id is None or  prev_doc_id != document_id:
           if prev_doc_id is not None:
-            output_stream.write(json.dumps(document) + '\n')
+            output_stream.write(json.dumps(document, ensure_ascii=False) + '\n')
           document = {
               'document_id': document_id,
               'text': '',
@@ -82,6 +81,6 @@ if __name__ == '__main__':
         #else:
         append_sentence_to_document(document, document_sentence)
         prev_doc_id = document_id
-      output_stream.write(json.dumps(document) + '\n')
+      output_stream.write(json.dumps(document, ensure_ascii=False) + '\n')
     #data = [document for document_id, document in data.items()]
     #save_json_file(data, args.save_to, args.jsonl)

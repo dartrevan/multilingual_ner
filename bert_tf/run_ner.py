@@ -173,7 +173,8 @@ class DataProcessor(object):
                 g = ' '.join(['O']*len(w.split()))
             else:
                 l = ' '.join([label for label in labels.strip().split() if len(label) > 0])
-                g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
+                g = l[:]
+                #g = ' '.join([gazetteer for gazetteer in gazetteers.strip().split() if len(gazetteer) > 0])
             yield [l, w, g]
 
 
@@ -405,11 +406,11 @@ def create_model(bert_config, is_training, input_ids, input_mask,
     hidden_size = output_layer.shape[-1].value
 
     output_weight = tf.get_variable(
-        "output_weights", [num_labels, hidden_size],
+        "output_weights_t", [num_labels, hidden_size],
         initializer=tf.truncated_normal_initializer(stddev=0.02)
     )
     output_bias = tf.get_variable(
-        "output_bias", [num_labels], initializer=tf.zeros_initializer()
+        "output_bias_t", [num_labels], initializer=tf.zeros_initializer()
     )
     with tf.variable_scope("loss"):
         if is_training:
